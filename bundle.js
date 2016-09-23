@@ -9,6 +9,8 @@ const CarUp = require('./carUp.js');
 
 const Log = require('./log.js');
 const River = require('./river.js');
+const Pit = require('./pit.js');
+
 
 /* Global variables */
 var canvas = document.getElementById('screen');
@@ -22,6 +24,8 @@ var log = new Log({x: 3*64, y: -150},{w: 64, h:80});
 var log2 = new Log({x: 2*64, y: -150},{w: 64, h:4*80});
 
 var river = new River ({x: 2*64, y: 0});
+var pit   = new Pit ({x: 9*64, y: 480/2});
+
 var level = 1;
 var showIns = 0;
 
@@ -72,6 +76,20 @@ function update(elapsedTime) {
 		  log2.playerDied();
 		  
 	  }
+	  
+	  if (testForRectCollision(player, pit))
+	  {
+		  if (pit.state == "open")
+		  {
+			  player.died();
+			  carDown.playerDied();
+			  carUp.playerDied();
+			  
+			  log.playerDied();
+			  log2.playerDied();
+			}
+	  }
+	  
 	 if ((!(testForRectCollision(player, log) || testForRectCollision(player, log2))) && testForRectCollision(player, river))
 	 {
 		 player.died();
@@ -80,6 +98,8 @@ function update(elapsedTime) {
 		 log.playerDied();
 		 log2.playerDied();
 		 }
+		 
+	  pit.update(elapsedTime); 
 	  log.update(elapsedTime);
 	  log2.update(elapsedTime);
 	  player.update(elapsedTime);
@@ -126,6 +146,7 @@ function render(elapsedTime, ctx) {
 	  ctx.fillText("\nCurren Level: "+level,750-180,40);
 	  ctx.fillText("\nLives: "+player.lives,750-180,60);
 	  
+	  pit.render(elapsedTime, ctx);
 	  log.render(elapsedTime, ctx);
 	  log2.render(elapsedTime, ctx);
 	  player.render(elapsedTime, ctx);
@@ -150,7 +171,7 @@ function testForRectCollision(r1, r2) {
 
 
 
-},{"./carDown.js":2,"./carUp.js":3,"./game.js":4,"./log.js":5,"./player.js":6,"./river.js":7}],2:[function(require,module,exports){
+},{"./carDown.js":2,"./carUp.js":3,"./game.js":4,"./log.js":5,"./pit.js":6,"./player.js":7,"./river.js":8}],2:[function(require,module,exports){
 const MS_PER_FRAME = 1000/8;
 
 /**
@@ -514,6 +535,85 @@ Log.prototype.render = function(time, ctx) {
   }
 }
 },{}],6:[function(require,module,exports){
+const MS_PER_FRAME = 1000/8;
+
+/**
+ * @module exports the Car class
+ */
+module.exports = exports = Pit;
+
+/**
+ * @constructor Car
+ * Creates a new Car object
+ * @param {Postition} position object specifying an x and y
+ */
+function Pit(position) {
+  this.state = "closed";
+  this.x = position.x;
+  this.y = position.y;
+  this.width  = 2*64;
+  this.height = 2*64;
+  this.timer = 0;
+  
+}
+
+/**
+ * @function updates the Car object
+ * {DOMHighResTimeStamp} time the elapsed time since the last frame
+ */
+Pit.prototype.update = function(time) {
+  switch(this.state) {
+    case "closed":
+      this.timer += time;
+      if(this.timer > MS_PER_FRAME*20) {
+        this.timer = 0;
+		//this.x+=this.speed;
+		this.state = "open";
+		
+        //this.frame += 1;
+        //if(this.frame > 3) this.frame = 0;
+      }
+      break;
+	  
+	  case "open":
+      this.timer += time;
+      if(this.timer > MS_PER_FRAME*13) {
+        this.timer = 0;
+		//this.x+=this.speed;
+		this.state = "closed";
+		
+        //this.frame += 1;
+        //if(this.frame > 3) this.frame = 0;
+      }
+      break;
+	  
+    // TODO: Implement your Car's update by state
+  }
+  
+  
+  
+}
+
+/**
+ * @function renders the Car into the provided context
+ * {DOMHighResTimeStamp} time the elapsed time since the last frame
+ * {CanvasRenderingContext2D} ctx the context to render into
+ */
+Pit.prototype.render = function(time ,ctx) {
+  switch(this.state) {
+    case "closed":
+      ctx.fillStyle = "#E2B740";
+	  ctx.fillRect(this.x,this.y,this.width,this.height);
+      break;
+	case "open":
+      ctx.fillStyle = "black";
+	  ctx.fillRect(this.x,this.y,this.width,this.height);
+      break;
+    // TODO: Implement your Car's redering according to state
+  }
+
+}
+},{}],7:[function(require,module,exports){
 "use strict";
 
 const MS_PER_FRAME = 1000/8;
@@ -749,7 +849,7 @@ Player.prototype.render = function(time, ctx) {
   }
 }
 
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 const MS_PER_FRAME = 1000/8;
 
 /**
